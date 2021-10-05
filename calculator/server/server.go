@@ -13,6 +13,34 @@ import (
 
 type server struct{}
 
+func (s *server) Max(stream calculatorpb.CalculatorService_MaxServer) error {
+	log.Println("Max called ...")
+	max := int32(0)
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+			log.Println("client finish streaming", err)
+			return nil
+		}
+		if err != nil {
+			log.Fatalln("err while receive request", err)
+			return err
+		}
+		log.Printf("receive num %d", req.GetNum())
+		if req.GetNum() >= max{
+			max = req.GetNum()
+		}
+		err = stream.Send(&calculatorpb.MaxResponse{Result: max})
+		if err != nil {
+			log.Fatalln("send max err %v", err)
+			return err
+		}
+		//time.Sleep(1000 * time.Millisecond)
+	}
+
+	return nil
+}
+
 func (*server) Average(stream calculatorpb.CalculatorService_AverageServer) error {
 	log.Println("Average called ...")
 	var average float32
