@@ -5,14 +5,31 @@ import (
 	"fmt"
 	"gRPC-demo/calculator/calculatorpb"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"io"
 	"log"
+	"math"
 	"net"
 	"time"
 )
 
 type server struct{}
 
+
+// TODO: Handle error
+func (s *server) Square(ctx context.Context, req *calculatorpb.SquareRequest) (*calculatorpb.SquareResponse, error) {
+	log.Println("Square called ...")
+	num := req.GetNum()
+	if num < 0 {
+		log.Printf("req num < 0, num = %v, return InvalidArgument", num)
+		return nil, status.Errorf(codes.InvalidArgument, "Expect num larger than 0, request num was %v", num)
+	}
+
+	return &calculatorpb.SquareResponse{SquareRoot: math.Sqrt(float64(num))}, nil
+}
+
+// TODO: BI-Direction streaming API
 func (s *server) Max(stream calculatorpb.CalculatorService_MaxServer) error {
 	log.Println("Max called ...")
 	max := int32(0)
@@ -41,6 +58,7 @@ func (s *server) Max(stream calculatorpb.CalculatorService_MaxServer) error {
 	return nil
 }
 
+// TODO: Client streaming API
 func (*server) Average(stream calculatorpb.CalculatorService_AverageServer) error {
 	log.Println("Average called ...")
 	var average float32
@@ -63,6 +81,7 @@ func (*server) Average(stream calculatorpb.CalculatorService_AverageServer) erro
 	return nil
 }
 
+// TODO: Server streaming API
 func (*server) PrimeNumberDecomposition(req *calculatorpb.PNDRequest, stream calculatorpb.CalculatorService_PrimeNumberDecompositionServer) error {
 	k := int32(2)
 	N := req.GetNumber()
@@ -80,6 +99,7 @@ func (*server) PrimeNumberDecomposition(req *calculatorpb.PNDRequest, stream cal
 	return nil
 }
 
+// TODO: unary API
 func (*server) Sum(ctx context.Context, req *calculatorpb.SumRequest) (*calculatorpb.SumResponse, error) {
 	log.Println("Sum called ...")
 	resq := &calculatorpb.SumResponse{

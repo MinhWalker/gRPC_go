@@ -4,6 +4,8 @@ import (
 	"context"
 	"gRPC-demo/calculator/calculatorpb"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"io"
 	"log"
 	"time"
@@ -23,9 +25,11 @@ func main() {
 	//callSum(client)
 	//callPND(client)
 	//callAverage(client)
-	callMax(client)
+	//callMax(client)
+	callSquareRoot(client, -4)
 }
 
+// TODO: unary API
 func callSum(c calculatorpb.CalculatorServiceClient) {
 	log.Println("calling sum api")
 	resp, err := c.Sum(context.Background(), &calculatorpb.SumRequest{
@@ -39,6 +43,7 @@ func callSum(c calculatorpb.CalculatorServiceClient) {
 	log.Printf("sum api response %v\n", resp.GetResult())
 }
 
+// TODO: Server streaming API
 func callPND(c calculatorpb.CalculatorServiceClient) {
 	log.Println("calling PND api")
 	stream, err := c.PrimeNumberDecomposition(context.Background(), &calculatorpb.PNDRequest{Number: 120})
@@ -57,6 +62,7 @@ func callPND(c calculatorpb.CalculatorServiceClient) {
 	}
 }
 
+// TODO: Client streaming API
 func callAverage(c calculatorpb.CalculatorServiceClient)  {
 	log.Println("calling average api")
 	stream, err := c.Average(context.Background())
@@ -95,6 +101,7 @@ func callAverage(c calculatorpb.CalculatorServiceClient)  {
 	log.Printf("average number %+v ", resp)
 }
 
+// TODO: BI-Direction streaming API
 func callMax(c calculatorpb.CalculatorServiceClient)  {
 	log.Println("calling max api")
 	stream, err := c.Max(context.Background())
@@ -154,3 +161,21 @@ func callMax(c calculatorpb.CalculatorServiceClient)  {
 	<-waitc
 }
 
+// TODO: Handle error
+func callSquareRoot(c calculatorpb.CalculatorServiceClient, num int32) {
+	log.Println("calling square root api")
+	resp, err := c.Square(context.Background(), &calculatorpb.SquareRequest{Num: num})
+	if err != nil {
+		log.Printf("call square root err %v ", err)
+		if errStatus, ok := status.FromError(err); ok {
+			log.Printf("err msg: %v\n", errStatus.Message())
+			log.Printf("err code: %v\n", errStatus.Code())
+			if errStatus.Code() == codes.InvalidArgument {
+				log.Printf("InvalidArgument num: %v", num)
+				return
+			}
+		}
+	}
+
+	log.Printf("square root api response %v\n", resp.GetSquareRoot())
+}
