@@ -7,9 +7,27 @@ import (
 	"google.golang.org/grpc"
 	"log"
 	"net"
+	"time"
 )
 
 type server struct{}
+
+func (*server) PrimeNumberDecomposition(req *calculatorpb.PNDRequest, stream calculatorpb.CalculatorService_PrimeNumberDecompositionServer) error {
+	k := int32(2)
+	N := req.GetNumber()
+	for N > 1 {
+		if N%k == 0 {
+			N = N / k
+			//sent to client
+			stream.Send(&calculatorpb.PNDResponse{Result: k})
+			time.Sleep(500 * time.Millisecond)
+		} else {
+			k++
+			log.Printf("k increase to %v", k)
+		}
+	}
+	return nil
+}
 
 func (*server) Sum(ctx context.Context, req *calculatorpb.SumRequest) (*calculatorpb.SumResponse, error) {
 	log.Println("Sum called ...")
