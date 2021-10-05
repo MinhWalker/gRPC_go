@@ -6,6 +6,7 @@ import (
 	"google.golang.org/grpc"
 	"io"
 	"log"
+	"time"
 )
 
 func main() {
@@ -20,7 +21,8 @@ func main() {
 
 	//log.Printf("services client %f", client)
 	//callSum(client)
-	callPND(client)
+	//callPND(client)
+	callAverage(client)
 }
 
 func callSum(c calculatorpb.CalculatorServiceClient) {
@@ -37,6 +39,7 @@ func callSum(c calculatorpb.CalculatorServiceClient) {
 }
 
 func callPND(c calculatorpb.CalculatorServiceClient) {
+	log.Println("calling PND api")
 	stream, err := c.PrimeNumberDecomposition(context.Background(), &calculatorpb.PNDRequest{Number: 120})
 
 	if err != nil {
@@ -52,3 +55,42 @@ func callPND(c calculatorpb.CalculatorServiceClient) {
 		log.Printf("prime number %v", resp.GetResult())
 	}
 }
+
+func callAverage(c calculatorpb.CalculatorServiceClient)  {
+	log.Println("calling average api")
+	stream, err := c.Average(context.Background())
+	if err != nil {
+		log.Fatalln("call average err %v", err)
+	}
+
+	listReq := []calculatorpb.AverageRequest{
+		calculatorpb.AverageRequest{
+			Num1: 5,
+		},
+		calculatorpb.AverageRequest{
+			Num1: 3,
+		},
+		calculatorpb.AverageRequest{
+			Num1: 8,
+		},
+		calculatorpb.AverageRequest{
+			Num1: 10,
+		},
+	}
+
+	for _, req := range listReq {
+		err := stream.Send(&req)
+		if err != nil {
+			log.Fatalln("send average request err %v", err)
+		}
+		time.Sleep(500 * time.Millisecond)
+	}
+
+	resp, err := stream.CloseAndRecv()
+	if err != nil {
+		log.Fatalln("receive average request err %v", err)
+	}
+
+	log.Printf("average number %+v ", resp)
+}
+
