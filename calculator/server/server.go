@@ -111,11 +111,10 @@ func (*server) Sum(ctx context.Context, req *calculatorpb.SumRequest) (*calculat
 func main() {
 	lis, err := net.Listen("tcp", "0.0.0.0:50069")
 	if err != nil {
-		log.Fatalln("err while create listen %v", err)
+		log.Fatalf("err while create listen %v", err)
 	}
-
-	certFile := "../server.crt"
-	keyFile := "../server.pem"
+	certFile := "ssl/server.crt"
+	keyFile := "ssl/server.pem"
 
 	creds, sslErr := credentials.NewServerTLSFromFile(certFile, keyFile)
 	if sslErr != nil {
