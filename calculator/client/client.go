@@ -3,13 +3,14 @@ package main
 import (
 	"context"
 	"gRPC-demo/calculator/calculatorpb"
+	"io"
+	"log"
+	"time"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/status"
-	"io"
-	"log"
-	"time"
 )
 
 func main() {
@@ -35,6 +36,10 @@ func main() {
 	//callAverage(client)
 	//callMax(client)
 	//callSquareRoot(client, -4)
+	//callSquareRoot(client, -4)
+	//callSumWithDeadline(client, 1*time.Second)
+
+	callSumWithDeadline(client, 1*time.Second)
 }
 
 // TODO: unary API
@@ -71,7 +76,7 @@ func callPND(c calculatorpb.CalculatorServiceClient) {
 }
 
 // TODO: Client streaming API
-func callAverage(c calculatorpb.CalculatorServiceClient)  {
+func callAverage(c calculatorpb.CalculatorServiceClient) {
 	log.Println("calling average api")
 	stream, err := c.Average(context.Background())
 	if err != nil {
@@ -110,7 +115,7 @@ func callAverage(c calculatorpb.CalculatorServiceClient)  {
 }
 
 // TODO: BI-Direction streaming API
-func callMax(c calculatorpb.CalculatorServiceClient)  {
+func callMax(c calculatorpb.CalculatorServiceClient) {
 	log.Println("calling max api")
 	stream, err := c.Max(context.Background())
 	if err != nil {
@@ -186,4 +191,31 @@ func callSquareRoot(c calculatorpb.CalculatorServiceClient, num int32) {
 	}
 
 	log.Printf("square root api response %v\n", resp.GetSquareRoot())
+}
+
+// TODO: sum with deadline API
+func callSumWithDeadline(c calculatorpb.CalculatorServiceClient, timeout time.Duration) {
+	log.Println("calling sum api with deadline")
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	resp, err := c.SumWithDeadline(ctx, &calculatorpb.SumRequest{
+		Num1: 5,
+		Num2: 10,
+	})
+	if err != nil {
+		if statusErr, ok := status.FromError(err); ok {
+			if statusErr.Code() == codes.DeadlineExceeded {
+				log.Println("calling sum api with deadline DeadlineExceeded")
+			} else {
+				log.Printf("calling sum api with deadline err %v", err)
+			}
+		} else {
+			log.Fatalf("calling sum api with deadline unknown err %v", err)
+		}
+		return
+	}
+
+	log.Printf("sum api response %v\n", resp.GetResult())
 }
