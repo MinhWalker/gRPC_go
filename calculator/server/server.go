@@ -6,6 +6,7 @@ import (
 	"gRPC-demo/calculator/calculatorpb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/status"
 	"io"
 	"log"
@@ -15,7 +16,6 @@ import (
 )
 
 type server struct{}
-
 
 // TODO: Handle error
 func (s *server) Square(ctx context.Context, req *calculatorpb.SquareRequest) (*calculatorpb.SquareResponse, error) {
@@ -44,7 +44,7 @@ func (s *server) Max(stream calculatorpb.CalculatorService_MaxServer) error {
 			return err
 		}
 		log.Printf("receive num %d", req.GetNum())
-		if req.GetNum() >= max{
+		if req.GetNum() >= max {
 			max = req.GetNum()
 		}
 		err = stream.Send(&calculatorpb.MaxResponse{Result: max})
@@ -114,7 +114,17 @@ func main() {
 		log.Fatalln("err while create listen %v", err)
 	}
 
-	s := grpc.NewServer()
+	certFile := "../server.crt"
+	keyFile := "../server.pem"
+
+	creds, sslErr := credentials.NewServerTLSFromFile(certFile, keyFile)
+	if sslErr != nil {
+		log.Fatalf("create creds ssl err %v\n", sslErr)
+		return
+	}
+	opts := grpc.Creds(creds)
+
+	s := grpc.NewServer(opts)
 
 	calculatorpb.RegisterCalculatorServiceServer(s, &server{})
 
