@@ -17,6 +17,24 @@ import (
 type server struct{}
 
 
+// TODO: Deadline
+func (s *server) SumWithDeadline(ctx context.Context, req *calculatorpb.SumRequest) (*calculatorpb.SumResponse, error) {
+	log.Println("Sum with deadline called ...")
+
+	for i := 0; i < 3; i++ {
+		if ctx.Err() == context.DeadlineExceeded {
+			log.Println("context.Canceled...")
+			return nil,  status.Errorf(codes.DeadlineExceeded, "client canceled req")
+		}
+		time.Sleep(1 *time.Second)
+	}
+
+	resq := &calculatorpb.SumResponse{
+		Result: req.GetNum1() + req.GetNum2(),
+	}
+	return resq, nil
+}
+
 // TODO: Handle error
 func (s *server) Square(ctx context.Context, req *calculatorpb.SquareRequest) (*calculatorpb.SquareResponse, error) {
 	log.Println("Square called ...")

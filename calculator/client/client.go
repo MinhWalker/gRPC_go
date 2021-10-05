@@ -26,7 +26,10 @@ func main() {
 	//callPND(client)
 	//callAverage(client)
 	//callMax(client)
-	callSquareRoot(client, -4)
+	//callSquareRoot(client, -4)
+	//callSumWithDeadline(client, 1*time.Second)
+
+	callSumWithDeadline(client, 1*time.Second)
 }
 
 // TODO: unary API
@@ -178,4 +181,31 @@ func callSquareRoot(c calculatorpb.CalculatorServiceClient, num int32) {
 	}
 
 	log.Printf("square root api response %v\n", resp.GetSquareRoot())
+}
+
+// TODO: sum with deadline API
+func callSumWithDeadline(c calculatorpb.CalculatorServiceClient, timeout time.Duration) {
+	log.Println("calling sum api with deadline")
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	resp, err := c.SumWithDeadline(ctx, &calculatorpb.SumRequest{
+		Num1: 5,
+		Num2: 10,
+	})
+	if err != nil {
+		if statusErr, ok := status.FromError(err); ok {
+			if statusErr.Code() == codes.DeadlineExceeded {
+				log.Println("calling sum api with deadline DeadlineExceeded")
+			} else {
+				log.Printf("calling sum api with deadline err %v", err)
+			}
+		} else {
+			log.Fatalf("calling sum api with deadline unknown err %v", err)
+		}
+		return
+	}
+
+	log.Printf("sum api response %v\n", resp.GetResult())
 }
