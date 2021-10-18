@@ -129,7 +129,7 @@ func (*server) Sum(ctx context.Context, req *calculatorpb.SumRequest) (*calculat
 func main() {
 	lis, err := net.Listen("tcp", "0.0.0.0:50069")
 	if err != nil {
-		log.Fatalln("err while create listen %v", err)
+		log.Fatalf("err while create listen %v", err)
 	}
 
 	s := grpc.NewServer()
@@ -140,6 +140,6 @@ func main() {
 	err = s.Serve(lis)
 
 	if err != nil {
-		log.Fatalln("err while serve %v", err)
+		log.Fatalf("err while serve %v", err)
 	}
 }

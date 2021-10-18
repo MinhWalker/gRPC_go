@@ -15,7 +15,7 @@ func main() {
 	cc, err := grpc.Dial("localhost:50069", grpc.WithInsecure())
 
 	if err != nil {
-		log.Fatalln("err when dial %v", err)
+		log.Fatalf("err when dial %v", err)
 	}
 	defer cc.Close()
 
