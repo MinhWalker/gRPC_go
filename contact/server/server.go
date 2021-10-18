@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"gRPC-demo/contact/contactpb"
 	"github.com/beego/beego/v2/client/orm"
@@ -21,7 +22,7 @@ func init()  {
 
 	orm.RegisterModel(new(ContactInfo))
 
-	err = orm.RunSyncdb("default", false, false)
+	err = orm.RunSyncdb("default", true, false)
 	if err != nil {
 		log.Panicf("run migrate DB err %v", err)
 	}
@@ -30,6 +31,28 @@ func init()  {
 }
 
 type server struct {}
+
+func (s server) Insert(ctx context.Context, req *contactpb.InsertRequest) (*contactpb.InsertResponse, error) {
+	log.Printf("calling insert %+v\n", req.Contact)
+	ci := ConvertPbContactToContactInfo(req.Contact)
+
+	err := ci.insert()
+	if err != nil {
+		resp := &contactpb.InsertResponse{
+			StatusCode: -1,
+			Message:    fmt.Sprintf("insert err %v", err),
+		}
+		return resp, nil
+		//return nil, status.Errorf(codes.InvalidArgument, "Insert %+v err %v", ci, err)
+	}
+
+	resp := &contactpb.InsertResponse{
+		StatusCode: 1,
+		Message:    "OK",
+	}
+
+	return resp, nil
+}
 
 func main()  {
 	lis, err := net.Listen("tcp", "0.0.0.0:50070")
